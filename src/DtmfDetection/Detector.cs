@@ -56,33 +56,69 @@
             // Convert ReadOnlySpan to an array to capture it inside the tasks
             var sampleArray = sampleBlock.ToArray();
 
-            // Task for the first loop
-            var task1 = Task.Run(() => {
+            // Create and start the tasks
+            var tasks = new Task[8];
+
+            tasks[0] = Task.Run(() => {
                 for (var i = 0; i < sampleArray.Length; i++) {
                     var c = i % channels;
-
                     loGoertz[c][0] = loGoertz[c][0].AddSample(sampleArray[i]);
+                }
+            });
+
+            tasks[1] = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
                     loGoertz[c][1] = loGoertz[c][1].AddSample(sampleArray[i]);
+                }
+            });
+
+            tasks[2] = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
                     loGoertz[c][2] = loGoertz[c][2].AddSample(sampleArray[i]);
+                }
+            });
+
+            tasks[3] = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
                     loGoertz[c][3] = loGoertz[c][3].AddSample(sampleArray[i]);
                 }
             });
 
-            // Task for second loop
-            var task2 = Task.Run(() => {
+            tasks[4] = Task.Run(() => {
                 for (var i = 0; i < sampleArray.Length; i++) {
                     var c = i % channels;
-
                     hiGoertz[c][0] = hiGoertz[c][0].AddSample(sampleArray[i]);
+                }
+            });
+
+            tasks[5] = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
                     hiGoertz[c][1] = hiGoertz[c][1].AddSample(sampleArray[i]);
+                }
+            });
+
+            tasks[6] = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
                     hiGoertz[c][2] = hiGoertz[c][2].AddSample(sampleArray[i]);
+                }
+            });
+
+            tasks[7] = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
                     hiGoertz[c][3] = hiGoertz[c][3].AddSample(sampleArray[i]);
                 }
             });
 
-            // Wait for both tasks to complete
-            Task.WaitAll(task1, task2);
+            // Wait for all tasks to complete
+            Task.WaitAll(tasks);
         }
+
 
         private PhoneKey[] Detect(
             IReadOnlyList<IReadOnlyList<Goertzel>> loGoertz,
