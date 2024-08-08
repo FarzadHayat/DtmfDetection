@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dtmf-detector": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\n11796138\\Downloads\\crowdNoise.ac3"
+    }
+  }
+}
