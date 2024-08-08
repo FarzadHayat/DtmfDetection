@@ -2,6 +2,8 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
+
     using DtmfDetection.Interfaces;
 
     /// <summary>Creates a `Goertzel` accumulator for each of the DTMF tone low (697, 770, 852, and 941 Hz) and high frequencies (1209, 1336, 1477, and 1633 Hz) and repeats that for each audio channel in the input data. When `Detect()` is called, each sample of the input sample block is added to each `Goertzel` accumulator and afterwards the Goertzel response of each frequency is retrieved. Reports a detected DTMF tone when exactly one of the four low frequency responses crosses the detection threshold, and exactly one of the four high frequency responses crosses the detection threshold.</summary>
@@ -51,19 +53,35 @@
         }
 
         private static void AddSamples(in ReadOnlySpan<float> sampleBlock, int channels, Goertzel[][] loGoertz, Goertzel[][] hiGoertz) {
-            for (var i = 0; i < sampleBlock.Length; i++) {
-                var c = i % channels;
+            // Convert ReadOnlySpan to an array to capture it inside the tasks
+            var sampleArray = sampleBlock.ToArray();
 
-                loGoertz[c][0] = loGoertz[c][0].AddSample(sampleBlock[i]);
-                loGoertz[c][1] = loGoertz[c][1].AddSample(sampleBlock[i]);
-                loGoertz[c][2] = loGoertz[c][2].AddSample(sampleBlock[i]);
-                loGoertz[c][3] = loGoertz[c][3].AddSample(sampleBlock[i]);
+            // Task for the first loop
+            var task1 = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
 
-                hiGoertz[c][0] = hiGoertz[c][0].AddSample(sampleBlock[i]);
-                hiGoertz[c][1] = hiGoertz[c][1].AddSample(sampleBlock[i]);
-                hiGoertz[c][2] = hiGoertz[c][2].AddSample(sampleBlock[i]);
-                hiGoertz[c][3] = hiGoertz[c][3].AddSample(sampleBlock[i]);
-            }
+                    loGoertz[c][0] = loGoertz[c][0].AddSample(sampleArray[i]);
+                    loGoertz[c][1] = loGoertz[c][1].AddSample(sampleArray[i]);
+                    loGoertz[c][2] = loGoertz[c][2].AddSample(sampleArray[i]);
+                    loGoertz[c][3] = loGoertz[c][3].AddSample(sampleArray[i]);
+                }
+            });
+
+            // Task for second loop
+            var task2 = Task.Run(() => {
+                for (var i = 0; i < sampleArray.Length; i++) {
+                    var c = i % channels;
+
+                    hiGoertz[c][0] = hiGoertz[c][0].AddSample(sampleArray[i]);
+                    hiGoertz[c][1] = hiGoertz[c][1].AddSample(sampleArray[i]);
+                    hiGoertz[c][2] = hiGoertz[c][2].AddSample(sampleArray[i]);
+                    hiGoertz[c][3] = hiGoertz[c][3].AddSample(sampleArray[i]);
+                }
+            });
+
+            // Wait for both tasks to complete
+            Task.WaitAll(task1, task2);
         }
 
         private PhoneKey[] Detect(
